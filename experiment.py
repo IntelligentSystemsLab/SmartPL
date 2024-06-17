@@ -3,20 +3,18 @@ This file contains a class of Experiment, which init env and model etc, and cont
 
 """
 import os
-from functools import partial
 
 import gymnasium as gym
 import numpy as np
-from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize, vec_monitor
+from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.monitor import Monitor
 from sb3_contrib.common.wrappers import ActionMasker
-from sb3_contrib.common.maskable.policies import MaskableMultiInputActorCriticPolicy, MaskableActorCriticPolicy, MaskableActorCriticCnnPolicy
-from sb3_contrib.common.maskable.evaluation import evaluate_policy
+from sb3_contrib.common.maskable.policies import MaskableMultiInputActorCriticPolicy, MaskableActorCriticPolicy
+
 from stable_baselines3.common.callbacks import CallbackList
 
 from callbacks import SaveOnBestTrainingRewardCallback, HParamsCallback
-from custom_model.custom_feature_extractor import CustomGCN, CustomCNN, CustomGAT, CustomGraphSAGE
-from custom_model.custom_feature_extractor import A2CGraphPolicy
+from models.custom_feature_extractor import CustomCNN, CustomGAT
 
 
 def mask_fn(env: gym.Env) -> np.ndarray:
@@ -112,9 +110,7 @@ class Experiment:
         if maskable:
             if 'Graph' in EnvClass.__name__:
                 model_type = {
-                    'GCN': CustomGCN,
                     'GAT': CustomGAT,
-                    'GraphSAGE': CustomGraphSAGE,
                 }
                 policy = MaskableMultiInputActorCriticPolicy
                 extractor_type = config['extractor']['type']
@@ -136,11 +132,8 @@ class Experiment:
         else:
             if 'Graph' in EnvClass.__name__:
                 policy = 'MultiInputPolicy'
-                # policy = A2CGraphPolicy
                 model_type = {
-                    'GCN': CustomGCN,
                     'GAT': CustomGAT,
-                    'GraphSAGE': CustomGraphSAGE,
                 }
                 extractor_type = config['extractor']['type']
                 model_class = model_type[extractor_type]
@@ -158,8 +151,7 @@ class Experiment:
             else:
                 policy = 'MlpPolicy'
                 policy_kwargs = None
-                # policy_kwargs = dict(net_arch=config['Models'][ModelClass.__name__]['net_arch'])
-                # del config['Models'][ModelClass.__name__]['net_arch']
+
 
         self.model_class = ModelClass
         
@@ -210,7 +202,7 @@ class Experiment:
                 obs, r, terminated, truncated, info = self.test_env.step(
                     action)
                 reward.append(r)
-                fuel += info['fuel consumption']
+                # fuel += info['fuel consumption']
 
                 if terminated:
                     # if info['crash']:
@@ -221,7 +213,8 @@ class Experiment:
                     break
                 if terminated or truncated:
                     if not info['crash']:
-                        fuels.append(fuel)
+                        pass
+                        # fuels.append(fuel)
                     break
             rewards.append(reward)
 

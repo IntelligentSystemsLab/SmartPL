@@ -5,13 +5,13 @@ import yaml
 import numpy as np
 import xml.etree.ElementTree as ET
 import pandas as pd
-from sb3_contrib.common.maskable.policies import MaskableMultiInputActorCriticPolicy, MaskableActorCriticPolicy
+from sb3_contrib.common.maskable.policies import MaskableMultiInputActorCriticPolicy
 from sb3_contrib.common.wrappers import ActionMasker
 import gymnasium as gym
 
 import envs
 import models
-from custom_model.custom_feature_extractor import CustomGAT,CustomCNN
+from custom_model.custom_feature_extractor import CustomGAT
 
 def mask_fn(env: gym.Env) -> np.ndarray:
     # Do whatever you'd like in this function to return the action mask
@@ -31,13 +31,13 @@ RENDER = None
 
 SAFE_MONITOR= [True,False]
 
-# 加载 XML 文件
+
 tree = ET.parse('envs/cfg/freeway.sumo.cfg')
 root = tree.getroot()
 
-# # 找到 <input> 元素
+
 input_element = root.find('input')
-# # 修改 <net-file> 的值
+
 net_file_element = input_element.find('net-file')
 
 with open('./config.yaml', 'r', encoding='utf-8') as config_file:
@@ -62,7 +62,7 @@ for lane_count in LANE_COUNT:
             config['Envs'][env_name].update({'safe_monitor': safe_monitor})
 
             net_file_element.set('value', '{}_lane_freeway.net.xml'.format(lane_count))
-            # 保存修改后的 XML 文件
+
             tree.write('envs/cfg/freeway.sumo.cfg')
             config['Envs'][env_name].update(
                 {'highway_lanes': lane_count})       
@@ -140,7 +140,7 @@ for lane_count in LANE_COUNT:
             Safe_monitors.append(safe_monitor)
         
 
-# 创建字典以存储指标
+
 data = {
     'mean_reward': Mean_rewards,
     'std_reward': Std_rewards,
@@ -151,8 +151,8 @@ data = {
     'Lane_counts': Lane_counts,
 }
 
-# 创建 DataFrame
+
 df = pd.DataFrame(data)
 
-# 保存为 CSV 文件
+
 df.to_csv('data/safe monitor/interval{0}/safe_monitor_{1}.csv'.format(HDV_INTERVAL[0],SEED), index=False)

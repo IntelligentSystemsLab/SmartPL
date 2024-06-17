@@ -5,8 +5,8 @@ import envs
 import models
 from experiment import Experiment
 
-# TRAIN = True
-TRAIN = False
+TRAIN = True
+# TRAIN = False
 
 with open('./config.yaml', 'r', encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
@@ -29,7 +29,6 @@ for env_name in config['Env']:
                                     config,
                                     curriculum_learning=False,
                                     load_path=load_path,
-                                    # debug=False,
                                     debug=True
                                     )
 

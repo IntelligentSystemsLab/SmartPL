@@ -45,7 +45,7 @@ class CustomGAT(BaseFeaturesExtractor):
         encoder_layers.append(nn.Linear(encoder_hidden_dim, encoder_out_dim))
         self.encoder = nn.Sequential(*encoder_layers)
 
-        self.gnn = GAT(in_channels=n_input,
+        self.gnn = GAT(in_channels=encoder_out_dim,
                        hidden_channels=gnn_hidden_channels,
                        num_layers=gnn_num_layers,
                        out_channels=gnn_out_channels)

@@ -7,9 +7,9 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 
 import envs
-from envs import PLDriving_highway_v2_CoOP, PLDriving_highway_v2_RuleBased
+from envs import PLDriving_highway_CoOP, PLDriving_highway_Plexe
 import models
-from custom_model.custom_feature_extractor import CustomGAT
+from models.custom_feature_extractor import CustomGAT
 
 # env_setting
 LANE_COUNT = [2,3,4]
@@ -22,22 +22,22 @@ EVAL_ROUND = 1
 
 # models
 # MODELS = ['SmartPL','CoOP','Plexe']
-MODELS = ['SmartPL']
-# 加载 XML 文件
+MODELS = ['Plexe']
+
 tree = ET.parse('envs/cfg/freeway.sumo.cfg')
 root = tree.getroot()
 
-# # 找到 <input> 元素
+
 input_element = root.find('input')
 
-# # 修改 <net-file> 的值
+
 net_file_element = input_element.find('net-file')
 
 with open('./config.yaml', 'r', encoding='utf-8') as config_file:
     config = yaml.safe_load(config_file)
 for index,seed in enumerate(SEED):
-    EnvClass = getattr(envs, 'PLDriving_highway_v2_Graph')
-    config['Envs']['PLDriving_highway_v2_Graph'].update({'seed': seed})
+    EnvClass = getattr(envs, 'PLDriving_highway_Graph')
+    config['Envs']['PLDriving_highway_Graph'].update({'seed': seed})
 
     Mean_rewards = []
     Mean_fuels = []
@@ -51,16 +51,16 @@ for index,seed in enumerate(SEED):
         net_file_element.set('value', '{}_lane_freeway.net.xml'.format(lane_count))
         # 保存修改后的 XML 文件
         tree.write('envs/cfg/freeway.sumo.cfg')
-        config['Envs']['PLDriving_highway_v2_Graph'].update(
+        config['Envs']['PLDriving_highway_Graph'].update(
             {'highway_lanes': lane_count})
         for hdv_interval in HDV_INTERVAL:
-            config['Envs']['PLDriving_highway_v2_Graph'].update(
+            config['Envs']['PLDriving_highway_Graph'].update(
                 {'hdv_interval': hdv_interval})
             # env = EnvClass('human',
-            #             config['Envs']['PLDriving_highway_v2_Graph'],
+            #             config['Envs']['PLDriving_highway_Graph'],
             #             label='Test')
             env = EnvClass(None,
-                        config['Envs']['PLDriving_highway_v2_Graph'],
+                        config['Envs']['PLDriving_highway_Graph'],
                         label='Test')
             for model_type in MODELS:
                 model = None
@@ -84,30 +84,30 @@ for index,seed in enumerate(SEED):
                                     **config['Models'][ModelClass.__name__],
                                     verbose=1)
                     print("\n============Loading {} {} Model===========\n".format(
-                        model.__class__.__name__, 'PLDriving_highway_v2_Graph'))
+                        model.__class__.__name__, 'PLDriving_highway_Graph'))
                     # model_path = os.path.join('checkpoints/MaskablePPO/PLDriving_highway_v2_Kinematic',CHECKPOINT[index],'best_model.zip')
                     model_path = os.path.join('checkpoints/Graph_MaskablePPO/PLDriving_highway_v2_Graph','PPO_13','best_model.zip')
                     model = model.load(model_path, env=env)
                     print("\n============Loading {} {} Model===========\n".format(
-                        model.__class__.__name__, 'PLDriving_highway_v2_Graph'))
+                        model.__class__.__name__, 'PLDriving_highway_Graph'))
                 elif model_type == 'CoOP':
-                    config['Envs']['PLDriving_highway_v2_CoOP'].update({'seed': seed})
-                    config['Envs']['PLDriving_highway_v2_CoOP'].update(
+                    config['Envs']['PLDriving_highway_CoOP'].update({'seed': seed})
+                    config['Envs']['PLDriving_highway_CoOP'].update(
                         {'highway_lanes': lane_count})
-                    # env = PLDriving_highway_v2_CoOP(
-                    #     'human', config=config['Envs']['PLDriving_highway_v2_CoOP'])
-                    env = PLDriving_highway_v2_CoOP(
-                        None, config=config['Envs']['PLDriving_highway_v2_CoOP'])
+                    # env = PLDriving_highway_CoOP(
+                    #     'human', config=config['Envs']['PLDriving_highway_CoOP'])
+                    env = PLDriving_highway_CoOP(
+                        None, config=config['Envs']['PLDriving_highway_CoOP'])
                 else:
-                    config['Envs']['PLDriving_highway_v2_RuleBased'].update(
+                    config['Envs']['PLDriving_highway_Plexe'].update(
                         {'seed': seed})
-                    config['Envs']['PLDriving_highway_v2_RuleBased'].update(
+                    config['Envs']['PLDriving_highway_Plexe'].update(
                         {'highway_lanes': lane_count})
-                    # env = PLDriving_highway_v2_RuleBased(
+                    # env = PLDriving_highway_Plexe(
                     #     'human',
-                    #     config=config['Envs']['PLDriving_highway_v2_RuleBased'])
-                    env = PLDriving_highway_v2_RuleBased(
-                        None, config=config['Envs']['PLDriving_highway_v2_RuleBased'])
+                    #     config=config['Envs']['PLDriving_highway_Plexe'])
+                    env = PLDriving_highway_Plexe(
+                        None, config=config['Envs']['PLDriving_highway_Plexe'])
 
                 rewards = []
                 crash_counts = []
@@ -156,7 +156,7 @@ for index,seed in enumerate(SEED):
                 Hdv_intervals.append(hdv_interval)
                 Model_types.append(model_type)
 
-    # 创建字典以存储指标
+
     data = {
         'mean_reward': Mean_rewards,
         'std_reward': Std_rewards,
@@ -167,9 +167,8 @@ for index,seed in enumerate(SEED):
         'Lane_counts': Lane_counts,
     }
 
-    # 创建 DataFrame
+
     df = pd.DataFrame(data)
 
-    # 保存为 CSV 文件
+
     df.to_csv('data/baselines/baselines_{1}.csv'.format(HDV_INTERVAL[0],seed), index=False)
-    # df.to_csv('data/EI/baselines_{0}_{1}.csv'.format(HDV_INTERVAL[0],seed), index=False)

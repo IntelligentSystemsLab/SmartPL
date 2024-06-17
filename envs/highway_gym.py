@@ -1,7 +1,7 @@
 """
 This py file defines the env for pl driving on highway in mixed traffic flow.
 """
-from typing import List, Dict, Tuple
+from typing import Dict, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -21,7 +21,7 @@ from coop.src.platoon import Platoon
 
 # # use the kinematic information for MLP to make lane-changing strategies
 class PLDriving_highway_Kinematic(gym.Env):
-    metadata = {""}
+    metadata = {"render_modes": ["human"]}
 
     def __init__(self, render_mode, config, label=None) -> None:
         super().__init__()
@@ -72,6 +72,7 @@ class PLDriving_highway_Kinematic(gym.Env):
 
         self.lc_mode = config['lc_mode']
         self.hdv_interval = self.config['hdv_interval']
+        self.safe = self.config['safe_monitor']
 
 
     # mask the invalid action for MaskablePPO
@@ -202,7 +203,7 @@ class PLDriving_highway_Kinematic(gym.Env):
                              pl_index=0,
                              route='route',
                              connection=self.connection,
-                             safety=True,
+                             safety=self.safe,
                              lane_count=self.highway_lanes)
 
         self.count += self.single_step
@@ -255,7 +256,7 @@ class PLDriving_highway_Kinematic(gym.Env):
         time_penalty = np.array(self.connection.simulation.getTime() - time)
 
         # frequently lc penalty
-        lc_penalty = 1 if abs(self.pl.current_lcs_time - self.pl.last_lc_time) <= 2 else 0
+        lc_penalty = 1 if abs(self.pl.current_lc_time - self.pl.last_lc_time) <= 2 else 0
 
         total_crash_penalty = len(kwargs['crash_ids']) * unit
 
@@ -329,6 +330,8 @@ class PLDriving_highway_Graph(PLDriving_highway_Kinematic):
             'adjacency': adjacency,
             'mask': mask
         })
+
+
 
     def _get_obs(self, hdv_ids):
         """construct a graph for each step
@@ -404,6 +407,80 @@ class PLDriving_highway_Graph(PLDriving_highway_Kinematic):
         mask[self.N_hdv:self.N_hdv + 1] = np.ones(1)
         # mask = mask.reshape(-1, 1)
         return {"node_feat": node_feat, "adjacency": adjacency, "mask": mask}
+
+    def reset(self, seed=None, options=None):
+        if self.seed != 'None':
+            np.random.seed(self.seed)
+
+        if not self.already_running:
+            if self.label is None:
+                label = 'default'
+            else:
+                label = self.label
+
+                # start up sumo
+            if self.render_mode == "human":
+                print("Creating a sumo-gui.")
+                self.sumo_cmd = [sumolib.checkBinary('sumo-gui')]
+            else:
+                print("No gui will display.")
+            self.sumo_cmd.extend(self.arguments)
+
+            traci.start(self.sumo_cmd, label=label)
+            self.connection = traci.getConnection(label)
+            self.already_running = True
+        else:
+            self.connection.load(self.arguments)
+
+        # add platoon control plugin in the sumo
+        self.plexe = Plexe()
+        self.listen_id = self.connection.addStepListener(self.plexe)
+        self.count = 0
+
+        self.hdv_index = 0
+
+        while self.count < 100:
+            self.add_random_flow()
+            self.count += self.single_step
+            self.connection.simulationStep(self.count)
+
+        self.count += self.single_step + 1
+        self.connection.simulationStep(self.count)
+
+        np.random.seed(None)
+        lane_index = np.random.randint(0, self.highway_lanes)
+        if self.seed != 'None':
+            np.random.seed(self.seed)
+
+        # add platoon on the road
+        self.pl = CarPlatoon(
+            self.plexe,
+            num_vehicles=4,
+            init_positions=0,
+            # init_lane=0,
+            init_lane=lane_index,
+            pl_index=0,
+            route='route',
+            connection=self.connection,
+             safety=self.config['safe_monitor'],
+            lane_count=self.highway_lanes)
+
+        self.count += self.single_step
+        self.connection.simulationStep(self.count)
+
+        if self.render_mode == "human":
+            self.connection.gui.trackVehicle("View #0", self.pl.leader_id)
+            self.connection.gui.setZoom("View #0", 1000)
+
+        hdv_ids = sorted([
+            vid for vid in self.connection.vehicle.getIDList()
+            if not vid.startswith('pl')
+        ])
+
+        observation = self._get_obs(hdv_ids)
+        info = {}
+
+        return observation, info
 
     def step(self, action):
         # map the rl action to pl
@@ -516,6 +593,7 @@ class PLDriving_highway_Plexe(PLDriving_highway_Kinematic):
         # add platoon control plugin in the sumo
         self.plexe = Plexe()
         self.listen_id = self.connection.addStepListener(self.plexe)
+
         self.count = 0
         self.hdv_index = 0
 
@@ -549,6 +627,7 @@ class PLDriving_highway_Plexe(PLDriving_highway_Kinematic):
 
         return None, None
 
+
     def step(self, action):
         # map the rl action to pl
 
@@ -570,7 +649,7 @@ class PLDriving_highway_Plexe(PLDriving_highway_Kinematic):
 
 # baseline: CoOP: V2V-based Cooperative Overtaking for Platoons on Freeways
 # reference: https://github.com/tkn-tub/coop
-class PLDriving_highway_v2_CoOP(PLDriving_highway_Kinematic):
+class PLDriving_highway_CoOP(PLDriving_highway_Kinematic):
 
     def __init__(self, render_mode, config, label=None) -> None:
         super().__init__(render_mode, config, label)
@@ -622,6 +701,7 @@ class PLDriving_highway_v2_CoOP(PLDriving_highway_Kinematic):
                            route='route',
                            pos=0,
                            lane=0)
+
         if self.render_mode == "human":
             self.connection.gui.trackVehicle("View #0",
                                              self.platoon.leader.v_id)
@@ -649,6 +729,25 @@ class PLDriving_highway_v2_CoOP(PLDriving_highway_Kinematic):
                 print('crashing!!!  veh_id:{}'.format(follower_id))
                 self.connection.removeStepListener(listenerID=self.listen_id)
         return done, crash_ids
+
+    def _get_reward(self, **kwargs):
+
+        # # including speed reward,crash penalty and time penalty
+        unit = 1
+
+        speed_reward = self.connection.vehicle.getSpeed(
+            self.platoon.leader.v_id)
+
+        time = self.connection.vehicle.getDeparture(self.platoon.leader.v_id)
+        time_penalty = np.array(self.connection.simulation.getTime() - time)
+
+        # frequently lc penalty
+        lc_penalty = 0
+
+        total_crash_penalty = len(kwargs['crash_ids']) * unit
+
+        reward = self.w_speed * speed_reward - self.w_p_time * time_penalty - self.w_p_lc * lc_penalty - self.w_p_crash * total_crash_penalty
+        return reward
 
     def step(self, action):
         # map the rl action to pl

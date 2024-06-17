@@ -80,8 +80,8 @@ def box_plot():
 
     data = []
     # for filename in os.listdir(data_dir):
-    #     if filename.endswith('.csv'):  # 检查是否为 CSV 文件
-    #         file_path = os.path.join(data_dir, filename)  # 构建完整文件路径
+    #     if filename.endswith('.csv'):  
+    #         file_path = os.path.join(data_dir, filename)  
     #     df = pd.read_csv(file_path)
     #     data.append(df)
     for seed in [0,2001,2023]:
@@ -107,7 +107,7 @@ data=data_filtered,
     palette=color)
     for patch in bar.patches:
         r, g, b, a = patch.get_facecolor()
-        patch.set_facecolor((r, g, b, 0.8))  # 设置透明度为0.3
+        patch.set_facecolor((r, g, b, 0.8))  
     ax.set_xlabel('')
     plt.ylabel('Mean Reward', fontname='Times New Roman', fontsize=fontsize,weight='bold')
     # plt.ylabel('Mean Simulation Time', fontname='Times New Roman', fontsize=fontsize)
@@ -135,7 +135,7 @@ def bar_plot():
     bars = sns.barplot(x='Model_types', y='mean_reward', data=data_filtered, palette=color, alpha=0.8,edgecolor='black', errcolor='black', errwidth=2, capsize=0.1,linewidth=2, zorder=2)
     
 
-    # 设置图表属性
+
     patterns = ['//', '--', '||', '\\\\']
     for bar, pattern in zip(bars.patches, patterns):
         bar.set_hatch(pattern)

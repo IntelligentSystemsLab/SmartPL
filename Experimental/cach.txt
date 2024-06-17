@@ -1,8 +1,0 @@
-# test-------------------
-# self.connection.gui.screenshot('View #0', './test2.jpg', 1000, 70)
-# test-------------------
-
-n_epochs:10
-gamma:0.8
-learning_reate:0.0001
-n_steps:4096
