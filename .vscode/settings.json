@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.cwd": "${fileDirname}",
+    "editor.fontFamily": "monospace,Consolas, 'Courier New',",
+    "terminal.integrated.fontFamily": "Consolas,微软雅黑",
+    "editor.inlayHints.fontFamily": " 'Courier New'",
+}

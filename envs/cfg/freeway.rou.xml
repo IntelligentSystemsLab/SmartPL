@@ -1,0 +1,33 @@
+<routes>
+	<vType id="vtypeauto" accel="2.5" decel="8" sigma="0" length="5"
+		   minGap="1" maxSpeed="40" color="1,0,0" probability="1" tau="1"
+		   carFollowModel="CC" tauEngine="0.5" omegaN="0.2" xi="1" c1="0.5" ccAccel="1.5" ploegKp="0.2" ploegKd="0.7"
+		   lanesCount="3" ploegH="0.5" speedFactor="2" />
+	<vType id="passenger" accel="3" decel="3" length="4"
+		   minGap="0" maxSpeed="28" vClass="passenger"
+		   guiShape="passenger" speedFactor="1" departSpeed="max"
+		   carFollowModel="IDM" />
+	<vType id="passenger2" accel="1.5" decel="4.5" sigma="0.5" length="4"
+		   minGap="0" maxSpeed="30" color="0.16,0.33,0.42" vClass="passenger"
+		   guiShape="passenger" speedFactor="1" departSpeed="max"
+	       carFollowModel="IDM" />
+	<vType id="rl-vehicle" length="4" color="1,0,0" carFollowModel="IDM" accel="3" decel="3" sigm="0" />
+	<vType id="PlatoonCar" accel="2.9" decel="7.5" maxSpeed="44.4"
+		   length="4.7" emissionClass="HBEFA3/PC" laneChangeModel="SL2015"
+		   carFollowModel="CC" sigma="0.5" tau="1.0" minGap="0"
+		   speedDev="0.1" speedFactor="1.2" vClass="passenger"
+		   color="100,149,237" lanesCount="3"
+		   omegaN="0.2" xi="1" c1="0.5"
+		   ploegKp="0.2" ploegKd="0.7" ploegH="0.5"/>
+	 <vType id="CarA" accel="2.5" decel="4.5" emergencyDecel="9.0" length="5" color="1,0,0" vClass="passenger" speedFactor="1" departSpeed="max" minGap="0" maxSpeed="40" carFollowModel="IDM" />
+	 <vType id="CarB" accel="2.5" decel="4.5" emergencyDecel="9.0" length="5" color="1,1,0" vClass="passenger" speedFactor="1" departSpeed="max" maxSpeed="30" carFollowModel="IDM"/>
+	<vType id="vtypeA" accel="2.5" decel="8" sigma="0" length="5"
+		   minGap="1" maxSpeed="30" color="1,1,0" probability="1" tau="1"
+		   carFollowModel="CC" tauEngine="0.5" omegaN="0.2" xi="1" c1="0.5" ccAccel="1.5" ploegKp="0.2" ploegKd="0.7"
+		   lanesCount="3" ploegH="0.5" speedFactor="2" />
+	<vType id="vtypeB" accel="2.5" decel="8" sigma="0" length="5"
+		   minGap="1" maxSpeed="40" color="1,0,0" probability="1" tau="1"
+		   carFollowModel="CC" tauEngine="0.5" omegaN="0.2" xi="1" c1="0.5" ccAccel="1.5" ploegKp="0.2" ploegKd="0.7"
+		   lanesCount="3" ploegH="0.5" speedFactor="2" />
+	<route id="route" edges="E5"/>
+</routes>
