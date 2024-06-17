@@ -1,0 +1,4 @@
+mean_reward,std_reward,crash_count,mean_sim_time,Model_types,Hdv_intervals,Lane_counts
+1555.4102754972025,0.0,0.0,200.0,CommPL,3,2
+1661.7946464832864,0.0,0.0,190.0,CommPL,3,3
+1749.8710584909609,0.0,0.0,180.0,CommPL,3,4
