@@ -1,2 +1,1 @@
-from models.DDQN import *
-from models.Graph_MaskablePPO import *
+from sb3_contrib.ppo_mask import MaskablePPO
